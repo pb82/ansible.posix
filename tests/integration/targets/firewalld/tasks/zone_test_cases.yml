@@ -1,47 +1,48 @@
-- name: firewalld create zone custom
+---
+- name: Firewalld create zone custom
   firewalld:
     zone: custom
-    permanent: True
+    permanent: true
     state: present
   register: result
 
-- name: assert firewalld custom zone created worked
-  assert:
+- name: Assert firewalld custom zone created worked
+  ansible.builtin.assert:
     that:
-    - result is changed
+      - result is changed
 
-- name: firewalld create zone custom rerun (verify not changed)
+- name: Firewalld create zone custom rerun (verify not changed)
   firewalld:
     zone: custom
-    permanent: True
+    permanent: true
     state: present
   register: result
 
-- name: assert firewalld custom zone created worked (verify not changed)
-  assert:
+- name: Assert firewalld custom zone created worked (verify not changed)
+  ansible.builtin.assert:
     that:
-    - result is not changed
+      - result is not changed
 
-- name: firewalld remove zone custom
+- name: Firewalld remove zone custom
   firewalld:
     zone: custom
-    permanent: True
+    permanent: true
     state: absent
   register: result
 
-- name: assert firewalld custom zone removed worked
-  assert:
+- name: Assert firewalld custom zone removed worked
+  ansible.builtin.assert:
     that:
-    - result is changed
+      - result is changed
 
-- name: firewalld remove custom zone rerun (verify not changed)
+- name: Firewalld remove custom zone rerun (verify not changed)
   firewalld:
     zone: custom
-    permanent: True
+    permanent: true
     state: absent
   register: result
 
-- name: assert firewalld custom zone removed worked (verify not changed)
-  assert:
+- name: Assert firewalld custom zone removed worked (verify not changed)
+  ansible.builtin.assert:
     that:
-    - result is not changed
+      - result is not changed
