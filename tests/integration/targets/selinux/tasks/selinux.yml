@@ -1,3 +1,4 @@
+---
 # (c) 2017, Sam Doran <sdoran@redhat.com>
 
 # This file is part of Ansible
@@ -14,32 +15,30 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
-
-
 # First Test
 # ##############################################################################
 # Test changing the state, which requires a reboot
 
 - name: TEST 1 | Make sure grubby is present
-  package:
+  ansible.builtin.package:
     name: grubby
     state: present
 
 - name: TEST 1 | Get current SELinux config file contents
-  slurp:
+  ansible.builtin.slurp:
     src: /etc/sysconfig/selinux
   register: selinux_config_original_base64
 
 - name: TEST 1 | Register SELinux config and SELinux status
-  set_fact:
+  ansible.builtin.set_fact:
     selinux_config_original_raw: "{{ selinux_config_original_base64.content | b64decode }}"
     before_test_sestatus: "{{ ansible_selinux }}"
 
 - name: TEST 1 | Split by line and register original config
-  set_fact:
+  ansible.builtin.set_fact:
     selinux_config_original: "{{ selinux_config_original_raw.split('\n') }}"
 
-- debug:
+- ansible.builtin.debug:
     var: "{{ item }}"
     verbosity: 1
   with_items:
@@ -58,23 +57,23 @@
     policy: targeted
   register: _disable_test1
 
-- debug:
+- ansible.builtin.debug:
     var: _disable_test1
     verbosity: 1
 
 - name: Before gathering the fact
-  debug:
+  ansible.builtin.debug:
     msg: "{{ ansible_selinux }}"
 
 - name: TEST 1 | Re-gather facts
-  setup:
+  ansible.builtin.setup:
 
 - name: After gathering the fact
-  debug:
+  ansible.builtin.debug:
     msg: "{{ ansible_selinux }}"
 
 - name: TEST 1 | Assert that status was changed, reboot_required is True, a warning was displayed, and SELinux is configured properly
-  assert:
+  ansible.builtin.assert:
     that:
       - _disable_test1 is changed
       - _disable_test1.reboot_required
@@ -82,7 +81,7 @@
       - ansible_selinux.config_mode == 'disabled'
       - ansible_selinux.type == 'targeted'
 
-- debug:
+- ansible.builtin.debug:
     var: ansible_selinux
     verbosity: 1
 
@@ -92,36 +91,36 @@
     policy: targeted
   register: _disable_test2
 
-- debug:
+- ansible.builtin.debug:
     var: _disable_test2
     verbosity: 1
 
 - name: TEST 1 | Assert that no change is reported, a warning was displayed, and reboot_required is True
-  assert:
+  ansible.builtin.assert:
     that:
       - _disable_test2 is not changed
       - (_disable_test1.warnings | length ) >= 1
       - _disable_test2.reboot_required
 
 - name: TEST 1 | Get modified config file
-  slurp:
+  ansible.builtin.slurp:
     src: /etc/sysconfig/selinux
   register: selinux_config_after_base64
 
 - name: TEST 1 | Register modified config
-  set_fact:
+  ansible.builtin.set_fact:
     selinux_config_after_raw: "{{ selinux_config_after_base64.content | b64decode }}"
 
 - name: TEST 1 | Split by line and register modified config
-  set_fact:
+  ansible.builtin.set_fact:
     selinux_config_after: "{{ selinux_config_after_raw.split('\n') }}"
 
-- debug:
+- ansible.builtin.debug:
     var: selinux_config_after
     verbosity: 1
 
 - name: TEST 1 | Ensure SELinux config file is properly formatted
-  assert:
+  ansible.builtin.assert:
     that:
       - selinux_config_original | length == selinux_config_after | length
       - selinux_config_after[selinux_config_after.index('SELINUX=disabled')]  is search("^SELINUX=\w+$")
@@ -139,7 +138,7 @@
   register: _grubby_test1
 
 - name: TEST 1 | Assert that kernel cmdline contains selinux=0
-  assert:
+  ansible.builtin.assert:
     that:
       - "' selinux=0' in _grubby_test1.stdout"
 
@@ -154,7 +153,7 @@
   register: _grubby_test1
 
 - name: TEST 1 | Assert that kernel cmdline still contains selinux=0
-  assert:
+  ansible.builtin.assert:
     that:
       - "' selinux=0' in _grubby_test1.stdout"
 
@@ -169,17 +168,16 @@
   register: _grubby_test2
 
 - name: TEST 1 | Assert that kernel cmdline doesn't contain selinux=0
-  assert:
+  ansible.builtin.assert:
     that:
       - "' selinux=0' not in _grubby_test2.stdout"
-
 
 # Second Test
 # ##############################################################################
 # Test changing only the policy, which does not require a reboot
 
 - name: TEST 2 | Make sure the policy is present
-  package:
+  ansible.builtin.package:
     name: selinux-policy-mls
     state: present
 
@@ -189,19 +187,19 @@
     policy: mls
   register: _state_test1
 
-- debug:
+- ansible.builtin.debug:
     var: _state_test1
     verbosity: 1
 
 - name: TEST 2 | Re-gather facts
-  setup:
+  ansible.builtin.setup:
 
-- debug:
+- ansible.builtin.debug:
     var: ansible_selinux
   tags: debug
 
 - name: TEST 2 | Assert that status was changed, reboot_required is False, no warnings were displayed, and SELinux is configured properly
-  assert:
+  ansible.builtin.assert:
     that:
       - _state_test1 is changed
       - not _state_test1.reboot_required
@@ -215,36 +213,36 @@
     policy: mls
   register: _state_test2
 
-- debug:
+- ansible.builtin.debug:
     var: _state_test2
     verbosity: 1
 
 - name: TEST 2 | Assert that no change was reported, no warnings were displayed, and reboot_required is False
-  assert:
+  ansible.builtin.assert:
     that:
       - _state_test2 is not changed
       - _state_test2.warnings is not defined
       - not _state_test2.reboot_required
 
 - name: TEST 2 | Get modified config file
-  slurp:
+  ansible.builtin.slurp:
     src: /etc/sysconfig/selinux
   register: selinux_config_after_base64
 
 - name: TEST 2 | Register modified config
-  set_fact:
+  ansible.builtin.set_fact:
     selinux_config_after_raw: "{{ selinux_config_after_base64.content | b64decode }}"
 
 - name: TEST 2 | Split by line and register modified config
-  set_fact:
+  ansible.builtin.set_fact:
     selinux_config_after: "{{ selinux_config_after_raw.split('\n') }}"
 
-- debug:
+- ansible.builtin.debug:
     var: selinux_config_after
     verbosity: 1
 
 - name: TEST 2 | Ensure SELinux config file is properly formatted
-  assert:
+  ansible.builtin.assert:
     that:
       - selinux_config_original | length == selinux_config_after | length
       - selinux_config_after[selinux_config_after.index('SELINUX=enforcing')]  is search("^SELINUX=\w+$")
@@ -255,7 +253,6 @@
     state: enforcing
     policy: targeted
 
-
 # Third Test
 # ##############################################################################
 # Test changing non-existing policy
@@ -265,21 +262,21 @@
     state: enforcing
     policy: non-existing-selinux-policy
   register: _state_test1
-  ignore_errors: yes
+  ignore_errors: true
 
-- debug:
+- ansible.builtin.debug:
     var: _state_test1
     verbosity: 1
 
 - name: TEST 3 | Re-gather facts
-  setup:
+  ansible.builtin.setup:
 
-- debug:
+- ansible.builtin.debug:
     var: ansible_selinux
   tags: debug
 
 - name: TEST 3 | Assert that status was not changed, the task failed, the msg contains proper information and SELinux was not changed
-  assert:
+  ansible.builtin.assert:
     that:
       - _state_test1 is not changed
       - _state_test1 is failed
@@ -287,12 +284,10 @@
       - ansible_selinux.config_mode == 'enforcing'
       - ansible_selinux.type == 'targeted'
 
-
 # Fourth Test
 # ##############################################################################
 # Test if check mode returns correct changed values and
 # doesn't make any changes
-
 
 - name: TEST 4 | Set SELinux to enforcing
   selinux:
@@ -300,7 +295,7 @@
     policy: targeted
   register: _check_mode_test1
 
-- debug:
+- ansible.builtin.debug:
     var: _check_mode_test1
     verbosity: 1
 
@@ -309,18 +304,18 @@
     state: enforcing
     policy: targeted
   register: _check_mode_test1
-  check_mode: yes
+  check_mode: true
 
 - name: TEST 4 | Re-gather facts
-  setup:
+  ansible.builtin.setup:
 
-- debug:
+- ansible.builtin.debug:
     var: ansible_selinux
     verbosity: 1
   tags: debug
 
 - name: TEST 4 | Assert that check mode is idempotent
-  assert:
+  ansible.builtin.assert:
     that:
       - _check_mode_test1 is success
       - not _check_mode_test1.reboot_required
@@ -332,18 +327,18 @@
     state: permissive
     policy: targeted
   register: _check_mode_test2
-  check_mode: yes
+  check_mode: true
 
 - name: TEST 4 | Re-gather facts
-  setup:
+  ansible.builtin.setup:
 
-- debug:
+- ansible.builtin.debug:
     var: ansible_selinux
     verbosity: 1
   tags: debug
 
 - name: TEST 4 | Assert that check mode doesn't set state permissive and returns changed
-  assert:
+  ansible.builtin.assert:
     that:
       - _check_mode_test2 is changed
       - not _check_mode_test2.reboot_required
@@ -354,18 +349,18 @@
   selinux:
     state: disabled
   register: _check_mode_test3
-  check_mode: yes
+  check_mode: true
 
 - name: TEST 4 | Re-gather facts
-  setup:
+  ansible.builtin.setup:
 
-- debug:
+- ansible.builtin.debug:
     var: ansible_selinux
     verbosity: 1
   tags: debug
 
 - name: TEST 4 | Assert that check mode didn't change anything, status is changed, reboot_required is True, a warning was displayed
-  assert:
+  ansible.builtin.assert:
     that:
       - _check_mode_test3 is changed
       - _check_mode_test3.reboot_required
@@ -379,7 +374,7 @@
     policy: targeted
   register: _check_mode_test4
 
-- debug:
+- ansible.builtin.debug:
     var: _check_mode_test4
     verbosity: 1
 
@@ -387,18 +382,18 @@
   selinux:
     state: disabled
   register: _check_mode_test4
-  check_mode: yes
+  check_mode: true
 
 - name: TEST 4 | Re-gather facts
-  setup:
+  ansible.builtin.setup:
 
-- debug:
+- ansible.builtin.debug:
     var: ansible_selinux
     verbosity: 1
   tags: debug
 
 - name: TEST 4 | Assert that check mode didn't change anything, status is changed, reboot_required is True, a warning was displayed
-  assert:
+  ansible.builtin.assert:
     that:
       - _check_mode_test4 is changed
       - _check_mode_test4.reboot_required
@@ -412,7 +407,7 @@
     policy: targeted
   register: _check_mode_test5
 
-- debug:
+- ansible.builtin.debug:
     var: _check_mode_test5
     verbosity: 1
 
@@ -425,18 +420,18 @@
   selinux:
     state: disabled
   register: _check_mode_test5
-  check_mode: yes
+  check_mode: true
 
 - name: TEST 4 | Re-gather facts
-  setup:
+  ansible.builtin.setup:
 
-- debug:
+- ansible.builtin.debug:
     var: ansible_selinux
     verbosity: 1
   tags: debug
 
 - name: TEST 4 | Assert that in check mode status was not changed, reboot_required is True, a warning was displayed, and SELinux is configured properly
-  assert:
+  ansible.builtin.assert:
     that:
       - _check_mode_test5 is success
       - _check_mode_test5.reboot_required
@@ -450,14 +445,14 @@
 # sure the module re-adds the expected lines
 
 - name: TEST 5 | Remove SELINUX key from /etc/selinux/config
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: /etc/selinux/config
-    regexp: '^SELINUX='
+    regexp: ^SELINUX=
     state: absent
-    backup: yes
+    backup: true
   register: _lineinfile_out1
 
-- debug:
+- ansible.builtin.debug:
     var: _lineinfile_out1
     verbosity: 1
 
@@ -468,14 +463,14 @@
   register: _set_enforcing1
 
 - name: TEST 5 | Re-gather facts
-  setup:
+  ansible.builtin.setup:
 
-- debug:
+- ansible.builtin.debug:
     var: ansible_selinux
     verbosity: 1
 
 - name: TEST 5 | Assert that SELINUX key is populated
-  assert:
+  ansible.builtin.assert:
     that:
       - _set_enforcing1 is success
       - _set_enforcing1 is changed
@@ -483,13 +478,13 @@
       - ansible_selinux.config_mode == 'enforcing'
 
 - name: TEST 5 | Remove SELINUXTYPE key from /etc/selinux/config
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: /etc/selinux/config
-    regexp: '^SELINUXTYPE='
+    regexp: ^SELINUXTYPE=
     state: absent
   register: _lineinfile_out2
 
-- debug:
+- ansible.builtin.debug:
     var: _lineinfile_out2
     verbosity: 1
 
@@ -500,14 +495,14 @@
   register: _set_policy2
 
 - name: TEST 5 | Re-gather facts
-  setup:
+  ansible.builtin.setup:
 
-- debug:
+- ansible.builtin.debug:
     var: ansible_selinux
     verbosity: 1
 
 - name: TEST 5 | Assert that SELINUXTYPE key is populated
-  assert:
+  ansible.builtin.assert:
     that:
       - _set_policy2 is success
       - _set_policy2 is changed
@@ -515,7 +510,7 @@
       - ansible_selinux.type == 'targeted'
 
 - name: TEST 5 | Restore original SELinux config file /etc/selinux/config
-  copy:
+  ansible.builtin.copy:
     dest: /etc/selinux/config
     src: "{{ _lineinfile_out1['backup'] }}"
-    remote_src: yes
+    remote_src: true

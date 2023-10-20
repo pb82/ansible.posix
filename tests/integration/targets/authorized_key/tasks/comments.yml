@@ -1,3 +1,4 @@
+---
 # -------------------------------------------------------------
 # comments
 
@@ -18,13 +19,13 @@
     path: "{{ output_dir | expanduser }}/authorized_keys"
   register: result
 
-- name: get the file content
-  shell: cat "{{ output_dir | expanduser }}/authorized_keys" | fgrep DATA_BASIC
-  changed_when: no
+- name: Get the file content
+  ansible.builtin.shell: cat "{{ output_dir | expanduser }}/authorized_keys" | fgrep DATA_BASIC
+  changed_when: false
   register: content
 
 - name: Assert that comment on an existing key was changed
-  assert:
+  ansible.builtin.assert:
     that:
       - "'user@acme.com' in content.stdout"
 
@@ -38,11 +39,11 @@
   register: result
 
 - name: Assert that no changes were made when running again
-  assert:
+  ansible.builtin.assert:
     that:
       - not result.changed
 
-- debug:
+- ansible.builtin.debug:
     var: "{{ item }}"
     verbosity: 1
   with_items:
